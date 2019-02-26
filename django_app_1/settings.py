@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites'
+    'django.contrib.sites'
 ]
 
 MIDDLEWARE = [
@@ -119,6 +120,62 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+import environ
+env = environ.Env()
+ALLOWED_HOSTS = ['*']
+SITE_ID = 1
+MIDDLEWARE += ['whitenoise.middleware.WhiteNoiseMiddleware']
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = env.bool("DEBUG", default=False)
+
+if env.str("DATABASE_URL", default=None):
+    DATABASES = {
+        'default': env.db()
+    }
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend'
+)
+
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static')
+]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+LOCAL_APPS = [
+    'home',
+    'home',
+]
+THIRD_PARTY_APPS = [
+    'rest_framework',
+    'rest_framework.authtoken',
+    'bootstrap4',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+]
+INSTALLED_APPS += LOCAL_APPS + THIRD_PARTY_APPS
+
+# allauth
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = None
+LOGIN_REDIRECT_URL = '/'
+
+if DEBUG:
+    # output email to console instead of sending
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+EMAIL_HOST = "smtp.sendgrid.net"
+EMAIL_HOST_USER = env.str("SENDGRID_USERNAME", "")
+EMAIL_HOST_PASSWORD = env.str("SENDGRID_PASSWORD", "")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
 import environ
 env = environ.Env()
